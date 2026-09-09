@@ -282,7 +282,7 @@ def deta_retrieval_from_vector_db(question: str) -> Dict[str, Any]:
         # ==================================================
         # 9. GROQ CLIENT
         # ==================================================
-        GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
+        GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
         ai_client = OpenAI(
             api_key=GROQ_API_KEY,

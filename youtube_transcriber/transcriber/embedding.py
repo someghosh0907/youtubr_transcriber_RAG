@@ -13,8 +13,7 @@ from openai import OpenAI
 import json
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 
-# HF_API_TOKEN = os.environ.get("HF_API_TOKEN", "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")
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 # GEMINI_API_KEY="AQ.Ab8RN6K9BDLFyOlaWylDA21jJ5VXYB4Xl4CEUugWc9pcbJv6Iw"
 # client = OpenAI(
 #     base_url="https://router.huggingface.co/v1",
