@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VidSum — YouTube AI Summarizer</title>
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% endblock css %}
+
+</head>
+<body>
+<header class="topbar container">
+  <a class="logo" href=" "><span class="logo-mark"></span>VidSum</a>
+  <nav class="nav"><a href="#features">Features</a><a href="#how">How it Works</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></nav>
+  <a style="margin-left: 400px;" class="btn btn-primary" href="/ask">Ask (RAG)</a>
+  <a class="btn btn-primary" href="#summarize">Get Started</a>
+</header>
+
+<main>
+<section class="hero" id="summarize">
+  <div class="container">
+    <div class="badge"><span class="badge-dot"></span>AI Powered • RAG Technology</div>
+    <h1>Summarize <span style="color: red;">Youtube</span> <span class="gradient-text">Videos in Seconds</span></h1>
+    <p>Extract key insights, generate useful summaries, and ask questions from any YouTube video using retrieval-augmented AI.</p>
+    <div class="features-row" id="features">
+      <div class="feature"><span class="feature-icon">▣</span>AI Summaries</div>
+      <div class="feature"><span class="feature-icon">✦</span>Key Insights</div>
+      <div class="feature"><span class="feature-icon">▢</span>Q&amp;A Support</div>
+      <div class="feature"><span class="feature-icon">◷</span>Time Saving</div>
+    </div>
+
+    <div class="url-card">
+      <form method="post" action="{% url 'video_summary' %}">
+        {% csrf_token %}
+        <h3>Paste YouTube Video Link</h3>
+        <p>Add a YouTube URL below to generate a comprehensive summary.</p>
+        <div class="input-wrap"><span>↗</span><input name="video_url" class="url-input" id="videoUrl" placeholder="https://www.youtube.com/watch?v=example"></div>
+        <!-- <div class="card-actions">
+          <div class="segment"><button class="active">⚡ Basic</button><button>▣ Detailed</button></div>
+          <label class="switch-row">Include Timestamps <span class="switch"></span></label>
+        </div> -->
+        <!-- <button class="btn btn-primary generate" onclick="generateSummary()">✦ Generate Summary</button> -->
+        <button class="btn btn-primary generate">✦ Generate Summary</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="how">
+<div class="container">
+  <div class="section-title"><h2>Try an Example</h2><p>Explore what VidSum can do with a few sample videos.</p></div>
+    <div class="examples" style="display:flex;gap: 10px; ">
+      {% for video in video_obj %}
+        <a class="video-card" href="/summary/{{ video.video_id }}"><div class="thumb"><span class="play">▶</span><span class="duration">{{ video.seconds_to_timedelta }}</span></div><div class="video-info"><h4>{{ video.video_name }}</h4><p>{{ video.channel_name }}</p></div></a>
+      {% endfor %}
+    </div>
+  <div class="stats">
+    <div class="stat"><strong>10K+</strong><span>Videos Summarized</span></div>
+    <div class="stat"><strong>50K+</strong><span>Happy Users</span></div>
+    <div class="stat"><strong>4.9/5</strong><span>User Rating</span></div>
+    <div class="stat"><strong>100K+</strong><span>Hours Saved</span></div>
+  </div>
+</div>
+</section>
+</main>
+<footer>© 2026 VidSum • AI answers are generated from retrieved video content.</footer>
+<script>
+function generateSummary(){
+  const url=document.getElementById('videoUrl').value.trim();
+  if(!url){alert('Please paste a YouTube URL first.');return;}
+  localStorage.setItem('vidsum_url',url);
+  window.location.href='summary.html';
+}
+</script>
+</body>
+
+

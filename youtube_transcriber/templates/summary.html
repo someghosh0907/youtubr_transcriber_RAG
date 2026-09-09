@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% endblock css %}
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+  <a class="logo" href=""><span class="logo-mark"></span>VidSum</a>
+  <nav class="side-nav">
+    <a href="/">⌂ &nbsp; Home</a><a class="active" href="summary.html">▣ &nbsp; Summary</a>
+    <a href="/ask">◌ &nbsp; Ask Questions</a><a href="#">◷ &nbsp; History</a><a href="#">☆ &nbsp; Bookmarks</a><a href="#">⚙ &nbsp; Settings</a>
+  </nav>
+  <div class="side-bottom">
+    <div class="pro-card"><h4>Upgrade to Pro</h4><ul><li>✓ Unlimited Summaries</li><li>✓ Longer Videos</li><li>✓ Export Options</li><li>✓ Priority Support</li></ul><button class="btn btn-primary">Upgrade Now</button></div>
+    <a href="index.html" style="color:#64748b;font-size:12px">↪ &nbsp; Logout</a>
+  </div>
+</aside>
+
+<main class="app-main">
+  <div class="back">← Back to Home</div>
+  <div class="page-head"><div><h1>Video Summary</h1><p>AI-generated summary based on the retrieved video transcript.</p></div>
+    <div class="head-actions"><button class="btn">⌯ Share</button><button class="btn">⇩ Export</button><button class="btn">☆ Bookmark</button></div>
+  </div>
+
+  <div class="video-header">
+    <div class="video-mini">▶</div><div><h3> {{ video_obj.video_name }} | {{ video_obj.channel_name }} </h3><p>{{ video_obj.channel_name }} &nbsp; • &nbsp; {{ video_obj.seconds_to_timedelta }} HRS &nbsp; • &nbsp; {{ video_obj.video_count }} views &nbsp; • &nbsp;Video ID: {{ video_obj.video_id }}</p></div>
+  </div>
+
+  <div class="tabs"><a class="active" href="summary.html">Overview</a><a href="#">Key Points</a><a href="#">Chapters</a><a href="#">Transcript</a></div>
+  <div class="dashboard-grid">
+    <div>
+      <section class="panel"><h3>Summary</h3>
+        {% if summary %}
+          <p>{{ summary }}</p>
+        {% else %}
+          <p>{{ video_obj.transcript }}.</p>
+        {% endif %}
+        <div class="tags"><span class="tag">Learning</span><span class="tag">Memory</span><span class="tag">Focus</span><span class="tag">Mindset</span></div>
+      </section>
+    </div>
+    <aside>
+      <section class="panel"><h3>Key Takeaways</h3><ul class="takeaways"><li>Active recall is more effective than passive review.</li><li>Visualization can strengthen memory.</li><li>Create an environment for deep focus.</li><li>Consistent practice compounds learning.</li><li>Break complex topics into manageable chunks.</li></ul></section>
+      <section class="panel stats-panel"><h3>Video Stats</h3><div><span>◷ Duration</span><strong>{{ video_obj.seconds_to_timedelta }}</strong></div><div><span>Views</span><strong>{{ video_obj.video_count }}</strong></div><div><span>Channel Name</span><strong>{{ video_obj.channel_name }}</strong></div></section>
+    </aside>
+  </div>
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% endblock css %}
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+  <a class="logo" href=" "><span class="logo-mark"></span>VidSum</a>
+  <nav class="side-nav">
+    <a href="/">⌂ &nbsp; Home</a><a href="/summary">▣ &nbsp; Summary</a>
+    <a class="active" href="/ask">◌ &nbsp; Ask Questions</a><a href="#">◷ &nbsp; History</a><a href="#">☆ &nbsp; Bookmarks</a><a href="#">⚙ &nbsp; Settings</a>
+  </nav>
+  <div class="side-bottom"><div class="pro-card"><h4>Upgrade to Pro</h4><ul><li>✓ Unlimited Summaries</li><li>✓ Longer Videos</li><li>✓ Export Options</li><li>✓ Priority Support</li></ul><button class="btn btn-primary">Upgrade Now</button></div><a href="index.html" style="color:#64748b;font-size:12px">↪ &nbsp; Logout</a></div>
+</aside>
+
+<main class="app-main">
+<div class="chat-page">
+  <div class="back">← Back to Home</div>
+  <div class="page-head"><div><h1>Ask Questions</h1><p>Ask anything about the video. The AI answers using retrieved video content.</p></div>
+  </div>
+
+  <section class="panel chat-box">
+    {% for chat in chat_history %}
+        <div class="chat-item">
+            <p>
+                <strong>You:</strong>
+                {{ chat.question }}
+            </p>
+            <p>
+                <strong>Assistant:</strong>
+                {{ chat.answer.answer }}
+            </p>
+      <div class="data-info" style="display: flex; gap: 10px;">
+        <div class="chat-message user-msg" id="confidence">Confidence: {{ chat.answer.confidence}}</div>
+        <div class="chat-message user-msg" id="source_found">Sources Found: {{ chat.answer.sources_found }}</div>
+        <div class="chat-message user-msg" id="cource_count">Source Count: {{ chat.answer.source_count }}</div>
+      </div>
+    {% endfor %}
+    {% if searched_data %}
+      <h3>Web Search Results</h3> 
+      {% for result in searched_data %}
+          <div class="search-result">
+              <h4>{{ result.title }} <a href="{{ result.link }}" target="_blank" rel="noopener noreferrer">
+                  🔗
+              </a></h4>
+              <p>{{ result.snippet }}</p>
+          </div>
+      {% endfor %}
+    {% endif %}
+  </section>
+  <form class="chat-input"  method="post" action="{% url 'question_me' %}">
+    {% csrf_token %}
+    <input name="question" id="question" placeholder="Ask a question about the video..." autocomplete="off">
+    <button type="submit">➤</button>
+  </form>
+  <div class="notice">Answers are generated based on the video content and may not always be 100% accurate.</div>
+</div>
+</main>
+</div>
+<script>
+function askQuestion(e){
+  e.preventDefault();
+  const input=document.getElementById('question');
+  if(!input.value.trim()) return;
+  alert("Connect this form to your RAG /ask endpoint. Question: " + input.value);
+  input.value="";
+}
+</script>
+</body>
+</html>

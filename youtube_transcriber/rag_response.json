@@ -1,0 +1,102 @@
+{
+  "status": "success",
+  "question": "what is kv cache?",
+  "answer": "\n<think>\nThe user wants to know what \"kv cache\" is based on the provided text.\n\n1.  **Scan the context for \"KV cache\" or \"kv cache\" definition.**\n    *   \"The KV cache just stores those keys and value matrices from previous steps so they don't recompute what you already know.\"\n    *   \"Each new token only needs to compute its own KVQ. Then it attends over the cached KV history.\"\n    *   \"KV cache is a memory for compute trade-off, but it's proven to be worth it for long sequences.\"\n\n2.  **Synthesize the definition.**\n    *   It stores keys and value matrices from previous steps.\n    *   Prevents recomputing known keys and values for every new token.\n    *   It's a memory for compute trade-off.\n\n3.  **Draft the answer.**\n    *   KV cache stores keys and value matrices from previous steps so they don't need to be recomputed for subsequent tokens. It represents a memory for compute trade-off used in long sequences.\n\n4.  **Refine for conciseness and strict adherence to constraints.**\n    *   Answer directly.\n    *",
+  "sources": {
+    "vector_search": [
+      {
+        "index": 1,
+        "content": "tokens on every single step. Without a cache, generating a thousand-token response means that the thousandth token has to recompute the keys and values for all 999 tokens before it. The KV cache just stores those keys and value matrices from previous steps so they don't recompute what you already know. Each new token only needs to compute its own KVQ. Then it attends over the cached KV history. KV cache is a memory for compute trade-off, but it's proven to be worth it for long sequences. Memory is the real bottleneck in LLM serving. So now let's look at how this naive serving allocates GPU memory. So a 13 billion parameter model, something like the Llama 13B, takes about 26 gigabytes of GPU memory just for its weights on an A140 gigabyte card. That's already 65% of our available memory. Just for the weights. That's VRAM before the user hits a single endpoint. Now, the remaining 35% has to support the KV cache for every active request. And here's where this traditional system starts to",
+        "preview": "tokens on every single step. Without a cache, generating a thousand-token response means that the thousandth token has to recompute the keys and values for all 999 tokens before it. The KV cache just stores those keys and value matrices from previous steps so they don't recompute what you already kn...",
+        "length": 999
+      },
+      {
+        "index": 2,
+        "content": "This controls what fraction of remaining VRAM goes to KV cache. The default is 0.9. Push it to 0.95 on stable workloads to pack more concurrent requests and pull it to .8 if you're seeing OOM errors under load burst. And you can benchmark your specific model before you commit here. If you need something to do that, you can check out guide LLM. It's an open source part of the LLM project. Second, enable prefix caching. Page detention hashes each KV block by its token sequence. Requests sharing a system prompt point to the same physical memory. VLLM computes and stores it once. In RAG pipelines, multi-turn chat and coding agents that are gonna hit rates of 75 to 95% are common, with time to first token dropping dramatically because shared prefill is skipped entirely. Third, enable chunked prefill. For throughput heavy workloads, by default VLLM runs prefill to completion before resuming decode, which causes streamed tokens to stutter when long prompts arrive. Chunked prefilled batches",
+        "preview": "This controls what fraction of remaining VRAM goes to KV cache. The default is 0.9. Push it to 0.95 on stable workloads to pack more concurrent requests and pull it to .8 if you're seeing OOM errors under load burst. And you can benchmark your specific model before you commit here. If you need somet...",
+        "length": 997
+      },
+      {
+        "index": 3,
+        "content": "for the weights. That's VRAM before the user hits a single endpoint. Now, the remaining 35% has to support the KV cache for every active request. And here's where this traditional system starts to fall apart. They pre-allocate a fixed contiguous block of memory for each request based on the maximum possible output length. So if your max context is 2048 tokens, but the average user sends in 200 tokens and gets 300 back, that's 1,500 tokens of reserved memory just sitting empty per request. So research shows that these traditional systems are wasting about 60 to 80% of this 35% used for KV cache memory, leaving only a small bit actually usable. While page detention treats GPU memory like OS treats RAM. Now, the KV cache is powerful, but it creates a new problem. How do you store it efficiently for many concurrent requests of wildly different lengths? Traditional systems store each request KV cache as a giant contiguous block, like reserving an entire hotel floor for a single guest. So",
+        "preview": "for the weights. That's VRAM before the user hits a single endpoint. Now, the remaining 35% has to support the KV cache for every active request. And here's where this traditional system starts to fall apart. They pre-allocate a fixed contiguous block of memory for each request based on the maximum ...",
+        "length": 997
+      },
+      {
+        "index": 4,
+        "content": "of token generation, the system has to reach back into GPU memory and retrieve that context. This is the decode phase. This is Memory Bound. And it's using KV cache. Now if memory is fragmented, if it's full, if it is being recomputed, it will become latency you can see. Okay, now that we understand the two phases of LLM imprints, prefill, and decode, let's discuss KV cache and page detention. When a transformer generates a new token, every layer computes three things for each token it's attending to. A query, a value, and a key. Now, the query is the concurrent token asking, what's relevant? To me. And then the key and the value are answering that question. The problem is that in autoregressive generation, you're producing one token at a time, but you have to rerun attention over all previous tokens on every single step. Without a cache, generating a thousand-token response means that the thousandth token has to recompute the keys and values for all 999 tokens before it. The KV cache",
+        "preview": "of token generation, the system has to reach back into GPU memory and retrieve that context. This is the decode phase. This is Memory Bound. And it's using KV cache. Now if memory is fragmented, if it's full, if it is being recomputed, it will become latency you can see. Okay, now that we understand...",
+        "length": 999
+      },
+      {
+        "index": 5,
+        "content": "for many concurrent requests of wildly different lengths? Traditional systems store each request KV cache as a giant contiguous block, like reserving an entire hotel floor for a single guest. So if your max sequence length is 2,048 tokens, that's how much memory you have on reserve. Even if the user only generates 200 tokens, the rest is wasted and unavailable for anyone else. And this is called internal fragmentation. It can be the culprit for KV cache memory waste along with external fragmentation, where a request of varying lengths leave large gaps between allocations. So if a new request needs 500 tokens, you may very well have enough memory, but no continuous region big enough for this to work. Also, look out for redundant duplication where the system prompt is stored separately for every concurrent request. Now, page attention eliminates each one of these issues and applies the exact same insight that operating systems use for RAM, virtual memory paging. And instead of one",
+        "preview": "for many concurrent requests of wildly different lengths? Traditional systems store each request KV cache as a giant contiguous block, like reserving an entire hotel floor for a single guest. So if your max sequence length is 2,048 tokens, that's how much memory you have on reserve. Even if the user...",
+        "length": 993
+      }
+    ],
+    "bm25_search": [
+      {
+        "index": 1,
+        "content": "then go to France. And France will be show. So, this is This will be the result. We have all the values from here without any repetition. So, this is what we mean by distinct. Just show me the list of the values without repeating the values, the same value. So, when we come come to here and we apply it, if we say country as we did before, we have the countries, we have the list, but we still have some repetition like here and here. So, we need to to add or to write distinct. And control E control E. And see, distinct is a keyword. So, we should write it the same way as it is. The same is spelling. Capital or small, it doesn't matter. The most important is same spelling, okay? And here as you can see, we have one time UK and one time USA because we used distinct. Okay, now >> [clears throat] >> what if we want to add another another column? We want Let's say that I want to see not just a country, but the country and the city. So, I I want the unique address, the country and the city",
+        "preview": "then go to France. And France will be show. So, this is This will be the result. We have all the values from here without any repetition. So, this is what we mean by distinct. Just show me the list of the values without repeating the values, the same value. So, when we come come to here and we apply...",
+        "length": 996,
+        "metadata": {}
+      },
+      {
+        "index": 2,
+        "content": "just go ahead and hover over here you can see actually how the calculation is basically done right and this is the formula that is applied e e ID W DJ plus BJ is equal to and you basically go ahead and calculate the qkv parameters right or metric and this will be very important because as soon as you go ahead and just search for data let's say if I go Ahad and hover over here right so here when I'm hovering over here two lines are basically getting highlighted one is data and the next word that is visualization so for this data and the next word visualization the correlated metrix what I can see is 084 right similarly with respect to all the other values you'll be able to see over here and this is how entirely it is trained and this is just one headed tension like that you have 12 headed tensions right so once this is done then you go to the next step in the next step you basically go ahead and create this multi-layered uh neural network so here you have this this is your residuals uh",
+        "preview": "just go ahead and hover over here you can see actually how the calculation is basically done right and this is the formula that is applied e e ID W DJ plus BJ is equal to and you basically go ahead and calculate the qkv parameters right or metric and this will be very important because as soon as yo...",
+        "length": 999,
+        "metadata": {}
+      }
+    ],
+    "combined": [
+      {
+        "index": 1,
+        "content": "tokens on every single step. Without a cache, generating a thousand-token response means that the thousandth token has to recompute the keys and values for all 999 tokens before it. The KV cache just stores those keys and value matrices from previous steps so they don't recompute what you already know. Each new token only needs to compute its own KVQ. Then it attends over the cached KV history. KV cache is a memory for compute trade-off, but it's proven to be worth it for long sequences. Memory is the real bottleneck in LLM serving. So now let's look at how this naive serving allocates GPU memory. So a 13 billion parameter model, something like the Llama 13B, takes about 26 gigabytes of GPU memory just for its weights on an A140 gigabyte card. That's already 65% of our available memory. Just for the weights. That's VRAM before the user hits a single endpoint. Now, the remaining 35% has to support the KV cache for every active request. And here's where this traditional system starts to",
+        "preview": "tokens on every single step. Without a cache, generating a thousand-token response means that the thousandth token has to recompute the keys and values for all 999 tokens before it. The KV cache just stores those keys and value matrices from previous steps so they don't recompute what you already kn...",
+        "length": 999
+      },
+      {
+        "index": 2,
+        "content": "This controls what fraction of remaining VRAM goes to KV cache. The default is 0.9. Push it to 0.95 on stable workloads to pack more concurrent requests and pull it to .8 if you're seeing OOM errors under load burst. And you can benchmark your specific model before you commit here. If you need something to do that, you can check out guide LLM. It's an open source part of the LLM project. Second, enable prefix caching. Page detention hashes each KV block by its token sequence. Requests sharing a system prompt point to the same physical memory. VLLM computes and stores it once. In RAG pipelines, multi-turn chat and coding agents that are gonna hit rates of 75 to 95% are common, with time to first token dropping dramatically because shared prefill is skipped entirely. Third, enable chunked prefill. For throughput heavy workloads, by default VLLM runs prefill to completion before resuming decode, which causes streamed tokens to stutter when long prompts arrive. Chunked prefilled batches",
+        "preview": "This controls what fraction of remaining VRAM goes to KV cache. The default is 0.9. Push it to 0.95 on stable workloads to pack more concurrent requests and pull it to .8 if you're seeing OOM errors under load burst. And you can benchmark your specific model before you commit here. If you need somet...",
+        "length": 997
+      },
+      {
+        "index": 3,
+        "content": "for the weights. That's VRAM before the user hits a single endpoint. Now, the remaining 35% has to support the KV cache for every active request. And here's where this traditional system starts to fall apart. They pre-allocate a fixed contiguous block of memory for each request based on the maximum possible output length. So if your max context is 2048 tokens, but the average user sends in 200 tokens and gets 300 back, that's 1,500 tokens of reserved memory just sitting empty per request. So research shows that these traditional systems are wasting about 60 to 80% of this 35% used for KV cache memory, leaving only a small bit actually usable. While page detention treats GPU memory like OS treats RAM. Now, the KV cache is powerful, but it creates a new problem. How do you store it efficiently for many concurrent requests of wildly different lengths? Traditional systems store each request KV cache as a giant contiguous block, like reserving an entire hotel floor for a single guest. So",
+        "preview": "for the weights. That's VRAM before the user hits a single endpoint. Now, the remaining 35% has to support the KV cache for every active request. And here's where this traditional system starts to fall apart. They pre-allocate a fixed contiguous block of memory for each request based on the maximum ...",
+        "length": 997
+      },
+      {
+        "index": 4,
+        "content": "of token generation, the system has to reach back into GPU memory and retrieve that context. This is the decode phase. This is Memory Bound. And it's using KV cache. Now if memory is fragmented, if it's full, if it is being recomputed, it will become latency you can see. Okay, now that we understand the two phases of LLM imprints, prefill, and decode, let's discuss KV cache and page detention. When a transformer generates a new token, every layer computes three things for each token it's attending to. A query, a value, and a key. Now, the query is the concurrent token asking, what's relevant? To me. And then the key and the value are answering that question. The problem is that in autoregressive generation, you're producing one token at a time, but you have to rerun attention over all previous tokens on every single step. Without a cache, generating a thousand-token response means that the thousandth token has to recompute the keys and values for all 999 tokens before it. The KV cache",
+        "preview": "of token generation, the system has to reach back into GPU memory and retrieve that context. This is the decode phase. This is Memory Bound. And it's using KV cache. Now if memory is fragmented, if it's full, if it is being recomputed, it will become latency you can see. Okay, now that we understand...",
+        "length": 999
+      },
+      {
+        "index": 5,
+        "content": "for many concurrent requests of wildly different lengths? Traditional systems store each request KV cache as a giant contiguous block, like reserving an entire hotel floor for a single guest. So if your max sequence length is 2,048 tokens, that's how much memory you have on reserve. Even if the user only generates 200 tokens, the rest is wasted and unavailable for anyone else. And this is called internal fragmentation. It can be the culprit for KV cache memory waste along with external fragmentation, where a request of varying lengths leave large gaps between allocations. So if a new request needs 500 tokens, you may very well have enough memory, but no continuous region big enough for this to work. Also, look out for redundant duplication where the system prompt is stored separately for every concurrent request. Now, page attention eliminates each one of these issues and applies the exact same insight that operating systems use for RAM, virtual memory paging. And instead of one",
+        "preview": "for many concurrent requests of wildly different lengths? Traditional systems store each request KV cache as a giant contiguous block, like reserving an entire hotel floor for a single guest. So if your max sequence length is 2,048 tokens, that's how much memory you have on reserve. Even if the user...",
+        "length": 993
+      },
+      {
+        "index": 6,
+        "content": "then go to France. And France will be show. So, this is This will be the result. We have all the values from here without any repetition. So, this is what we mean by distinct. Just show me the list of the values without repeating the values, the same value. So, when we come come to here and we apply it, if we say country as we did before, we have the countries, we have the list, but we still have some repetition like here and here. So, we need to to add or to write distinct. And control E control E. And see, distinct is a keyword. So, we should write it the same way as it is. The same is spelling. Capital or small, it doesn't matter. The most important is same spelling, okay? And here as you can see, we have one time UK and one time USA because we used distinct. Okay, now >> [clears throat] >> what if we want to add another another column? We want Let's say that I want to see not just a country, but the country and the city. So, I I want the unique address, the country and the city",
+        "preview": "then go to France. And France will be show. So, this is This will be the result. We have all the values from here without any repetition. So, this is what we mean by distinct. Just show me the list of the values without repeating the values, the same value. So, when we come come to here and we apply...",
+        "length": 996
+      }
+    ]
+  },
+  "metadata": {
+    "vector_count": 5,
+    "bm25_count": 2,
+    "total_retrieved": 7,
+    "unique_count": 7,
+    "final_count": 6,
+    "tokens_used": 1692
+  },
+  "error": null
+}
