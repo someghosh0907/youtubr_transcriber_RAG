@@ -14,14 +14,14 @@ EMPLOYEE_COLLECTION = "transcriber_rag"
 #     embedding_function=OpenAIEmbeddings(),
 #     # other params...
 # )
-def create_db_collection(chunks,embeddings):
+def create_db_collection(chunks,embedding_model):
     collection = client.get_or_create_collection(name="transcriber_rag")
     ids = [str(uuid.uuid4()) for _ in range(len(chunks))]
     documents = [
         chunk.page_content
         for chunk in chunks
     ]
-    vectors = embeddings.embed_documents(
+    vectors = embedding_model.embed_documents(
         documents
     )
     collection.add(ids=ids,embeddings=vectors,documents=documents)

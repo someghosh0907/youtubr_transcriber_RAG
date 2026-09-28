@@ -27,15 +27,19 @@
   <section class="panel chat-box">
     {% for chat in chat_history %}
         <div class="chat-item">
-            <p>
-                <strong>You:</strong>
-                {{ chat.question }}
-            </p>
-            <p>
-                <strong>Assistant:</strong>
-                {{ chat.answer.answer }}
-            </p>
-      <div class="data-info" style="display: flex; gap: 10px;">
+            <div style="background-color: rgb(10, 70, 235); border-radius: 15px;margin: 10px; color: rgb(240, 234, 234); padding: 6px;">
+              <p>
+                  <strong>You:</strong>
+                  {{ chat.question }}
+              </p>
+            </div>
+            <div style="background-color: rgb(25, 30, 43); border-radius: 15px;margin: 10px; color: black;  padding: 6px;">
+              <p>
+                  <strong>Assistant:</strong>
+                  {{ chat.answer.answer }}
+              </p>
+            </div>
+      <div class="data-info" style="display: flex; gap: 10px; padding: 10px;">
         <div class="chat-message user-msg" id="confidence">Confidence: {{ chat.answer.confidence}}</div>
         <div class="chat-message user-msg" id="source_found">Sources Found: {{ chat.answer.sources_found }}</div>
         <div class="chat-message user-msg" id="cource_count">Source Count: {{ chat.answer.source_count }}</div>

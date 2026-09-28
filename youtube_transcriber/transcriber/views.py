@@ -2,12 +2,49 @@ from django.shortcuts import render
 from .utils import qa_queue, get_youtube_video_id,get_the_video_transcripts,get_the_video_summary
 from .embedding import retrieve_based_on_question,embed_the_chunks
 from .models import VideoTranscriptData
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+
+@require_GET
+def get_transcript_api(request, video_id: str):
+    """
+    Return saved YouTube transcript/summary data as JSON
+    for MCP tools and other API clients.
+    """
+    video_obj = VideoTranscriptData.objects.filter(
+        video_id=video_id
+    ).first()
+
+    if video_obj is None:
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": "Video transcript data was not found.",
+                "video_id": video_id
+            },
+            status=404
+        )
+
+    return JsonResponse(
+        {
+            "status": "success",
+            "video_id": video_obj.video_id,
+
+            # Update these attribute names to match your actual model.
+            "title": getattr(video_obj, "title", ""),
+            "duration": getattr(video_obj, "duration", ""),
+            "summary": getattr(video_obj, "summary", ""),
+            "transcript": getattr(video_obj, "transcript", ""),
+        },
+        status=200
+    )
 # Create your views here.
 def landing_page(request):
     video_obj=VideoTranscriptData.objects.all().order_by("-created_at")[0:5]
     return render(request,"index.html",context={"video_obj":video_obj})
 
 def get_transcripts_by_id(request,video_id):
+    # x1H4erBZAKg
     video_obj=VideoTranscriptData.objects.filter(video_id=video_id).first()
     return render(request,"summary.html",context={"video_obj":video_obj})
 

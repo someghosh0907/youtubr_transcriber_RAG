@@ -12,6 +12,7 @@ import os
 from openai import OpenAI
 import json
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+from functools import lru_cache
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 print("GROQ_API_KEY",GROQ_API_KEY)
@@ -20,6 +21,15 @@ print("GROQ_API_KEY",GROQ_API_KEY)
 #     base_url="https://router.huggingface.co/v1",
 #     api_key=HF_API_TOKEN,
 # )
+
+@lru_cache(maxsize=1)
+def get_embedding_model() -> HuggingFaceEmbeddings:
+    return HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={"device": "cpu"},
+        encode_kwargs={"normalize_embeddings": True}
+    )
+
 client = OpenAI(
     api_key=GROQ_API_KEY,
     base_url="https://api.groq.com/openai/v1"
@@ -30,11 +40,12 @@ def embed_the_chunks(transcript):
     print(len(chunks))
     # print(chunks[0].page_content)
 
-    embeddings = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2",
-        model_kwargs={"device": "cpu"}
-    )
-    create_db_collection(chunks,embeddings)   #Populating the DB
+    # embeddings = HuggingFaceEmbeddings(
+    #     model_name="all-MiniLM-L6-v2",
+    #     model_kwargs={"device": "cpu"}
+    # )
+    embedding_model = get_embedding_model()
+    create_db_collection(chunks,embedding_model)   #Populating the DB
     print("Data embedded and added to DB")
     # Embedding and storing the embeddings done
     return "Data embedded and added to DB"
